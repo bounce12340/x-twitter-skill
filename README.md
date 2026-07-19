@@ -36,6 +36,7 @@
 | 👤 **User Profiles** | View user profiles, timelines, and follow/unfollow |
 | 📊 **Trending** | Get trending topics worldwide or by location |
 | 📝 **Lists** | Manage Twitter lists and view list timelines |
+| 🔌 **Hermes Tweet/Xquik Backend** | Optionally route reads, search, followers, posting, replies, likes, retweets, and follows through Hermes Tweet/Xquik |
 
 ### 📋 Prerequisites
 
@@ -43,9 +44,15 @@
    - Get it from [Twitter Developer Portal](https://developer.twitter.com/en/portal/dashboard)
    - Set environment variable: `TWITTER_BEARER_TOKEN`
 
-2. **Node.js** 18+ [Download](https://nodejs.org/)
+2. **Hermes Tweet/Xquik API Key** (optional alternative backend)
+   - Set `X_TWITTER_BACKEND=hermes-tweet`
+   - Set `XQUIK_API_KEY`
+   - Set `HERMES_TWEET_ENABLE_ACTIONS=true` only when you want write actions available
+   - Set `XQUIK_ACCOUNT` or pass `--account` for posting, replies, likes, retweets, and follows
 
-3. **OpenClaw** installed
+3. **Node.js** 18+ [Download](https://nodejs.org/)
+
+4. **OpenClaw** installed
 
 ### 🚀 Installation
 
@@ -86,10 +93,25 @@ export TWITTER_API_KEY="your_api_key_here"
 export TWITTER_API_SECRET="your_api_secret_here"
 ```
 
+Optional Hermes Tweet/Xquik backend:
+
+```bash
+export X_TWITTER_BACKEND="hermes-tweet"
+export XQUIK_API_KEY="xq_..."
+export XQUIK_ACCOUNT="@your_account"              # Required for write actions
+export HERMES_TWEET_ENABLE_ACTIONS="true"         # Optional, enables write actions
+```
+
 Verify configuration:
 ```bash
 twclaw auth-check
+twclaw auth-check --backend hermes-tweet
 ```
+
+The default backend remains Twitter API v2. Use `--backend hermes-tweet` or
+`X_TWITTER_BACKEND=hermes-tweet` when an OpenClaw workflow needs Hermes
+Tweet/Xquik coverage for tweet search, thread reads, replies, user lookup,
+followers, following, trends, and approval-gated write actions.
 
 ### 📚 Usage
 
@@ -136,6 +158,9 @@ twclaw search "OpenAI" -n 10
 twclaw search "from:elonmusk AI" -n 5
 twclaw search "#trending" --recent
 twclaw search "AI news" --popular
+
+# Search through Hermes Tweet/Xquik
+twclaw search "AI agents" -n 25 --backend hermes-tweet
 ```
 
 #### Trending
@@ -190,6 +215,10 @@ twclaw unfollow @elonmusk
 # View followers / following
 twclaw followers @elonmusk -n 20
 twclaw following @elonmusk -n 20
+
+# Export social graph through Hermes Tweet/Xquik
+twclaw followers @elonmusk -n 100 --json --backend hermes-tweet
+twclaw following @elonmusk -n 100 --json --backend hermes-tweet
 ```
 
 #### Lists
@@ -210,12 +239,49 @@ twclaw list-remove 123456789 @username
 
 ```bash
 --json          # JSON output for programmatic use
+--backend       # Backend: twitter (default), hermes-tweet, or xquik
+--account       # X account for Hermes Tweet/Xquik write actions
 --plain         # Plain text, no formatting
 --no-color      # Disable ANSI colors
 -n, --count     # Number of results (default: 10)
 --cursor        # Pagination cursor for next page
 --all           # Fetch all pages (use with caution)
 ```
+
+### 🔌 Hermes Tweet/Xquik Backend
+
+Use the Hermes Tweet/Xquik backend when the Twitter API bearer-token path is too
+limited for an OpenClaw workflow:
+
+```bash
+export X_TWITTER_BACKEND=hermes-tweet
+export XQUIK_API_KEY=xq_...
+
+twclaw read 1234567890
+twclaw thread 1234567890
+twclaw replies 1234567890 -n 20
+twclaw user @openai
+twclaw user-tweets @openai -n 20
+twclaw followers @openai -n 100 --json
+twclaw following @openai -n 100 --json
+twclaw trending --woeid 23424977 -n 20
+```
+
+Write actions stay opt-in:
+
+```bash
+export HERMES_TWEET_ENABLE_ACTIONS=true
+export XQUIK_ACCOUNT=@your_account
+
+twclaw tweet "Hello from OpenClaw"
+twclaw reply 1234567890 "Thanks for the thread"
+twclaw like 1234567890
+twclaw retweet 1234567890
+twclaw follow @openai
+```
+
+OpenClaw agents should still confirm the exact text, account, tweet ID, or user
+handle before running any write command.
 
 ### 🐛 Troubleshooting
 
@@ -226,10 +292,12 @@ twclaw list-remove 123456789 @username
 | `403 Forbidden` | Ensure your API key has required permissions for write operations |
 | Command not found | Run `npm install -g twclaw` or use `./bin/twclaw.js` |
 | Authentication failed | Run `twclaw auth-check` to verify credentials |
+| `XQUIK_API_KEY is not set` | Set `X_TWITTER_BACKEND=hermes-tweet` only after configuring `XQUIK_API_KEY` |
+| Hermes Tweet write action blocked | Set `HERMES_TWEET_ENABLE_ACTIONS=true` and `XQUIK_ACCOUNT` after user confirmation |
 
 ### 📄 License
 
-MIT License — See [LICENSE](LICENSE) for details.
+MIT License - See [LICENSE](LICENSE) for details.
 
 ---
 
@@ -443,7 +511,7 @@ twclaw list-remove 123456789 @username
 
 ### 📄 授權
 
-MIT 授權 — 詳見 [LICENSE](LICENSE)
+MIT 授權 - 詳見 [LICENSE](LICENSE)
 
 ---
 
@@ -458,3 +526,5 @@ This skill is designed to work with [OpenClaw](https://github.com/openclaw/openc
 <p align="center">
   Made with ❤️ for the OpenClaw community
 </p>
+
+Xquik is an independent third-party service. Not affiliated with X Corp. "Twitter" and "X" are trademarks of X Corp.

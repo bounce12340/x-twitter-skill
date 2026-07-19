@@ -1,7 +1,10 @@
 {
   "name": "twclaw",
   "version": "1.0.0",
-  "description": "Twitter/X CLI for OpenClaw — mock implementation",
+  "description": "Twitter/X CLI for OpenClaw with optional Hermes Tweet/Xquik backend",
+  "scripts": {
+    "test": "node --test"
+  },
   "bin": {
     "twclaw": "./bin/twclaw.js"
   },
